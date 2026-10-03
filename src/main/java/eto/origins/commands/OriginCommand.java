@@ -55,6 +55,22 @@ public final class OriginCommand implements TabExecutor {
                     }
                 }
             }
+            case "debug" -> {
+                if (!(sender instanceof Player p)) {
+                    sender.sendMessage("仅玩家可用");
+                    return true;
+                }
+                var origin = mgr.originOf(p);
+                p.sendMessage("§e当前起源: " + (origin == null ? "无" : origin.name()));
+                for (var power : mgr.powersOf(p)) {
+                    String id = power.definition().id();
+                    boolean act = false;
+                    try { act = power.active(); } catch (Exception ex) { /* ignore */ }
+                    String extra = power instanceof eto.origins.engine.powers.ActivePowers.ClimbingPower cp
+                            ? " {" + cp.debugState() + "}" : "";
+                    p.sendMessage(" §8- " + id + " §7[激活:" + act + "]" + extra);
+                }
+            }
             case "list" -> {
                 sender.sendMessage("§e可用起源:");
                 List<Origin> origins = new ArrayList<>(mgr.origins());
@@ -100,7 +116,7 @@ public final class OriginCommand implements TabExecutor {
                 sender.sendMessage("§a已将 " + target.getName() + " 的起源设为 " + id);
                 target.sendMessage("§a你的起源已被设为 §e" + mgr.origin(id).name());
             }
-            default -> sender.sendMessage("§7用法: /origin [select|info|list|reload|set]");
+            default -> sender.sendMessage("§7用法: /origin [select|info|list|debug|reload|set]");
         }
         return true;
     }
@@ -108,7 +124,7 @@ public final class OriginCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 1) {
-            return List.of("select", "info", "list", "reload", "set").stream()
+            return List.of("select", "info", "list", "debug", "reload", "set").stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("set")) {

@@ -52,7 +52,7 @@ public final class ActivePowers {
         @Override
         public boolean onTrigger() {
             boolean nowOn = mgr.toggleStateWithParents(player, def.id());
-            player.sendActionBar(nowOn ? "§a已开启: " + def.id() : "§7已关闭: " + def.id());
+            player.sendMessage(nowOn ? "§a[爬墙模式] 已开启" : "§7[爬墙模式] 已关闭");
             return true;
         }
     }
@@ -129,16 +129,44 @@ public final class ActivePowers {
         @Override
         public void tick(long tickCount) {
             if (tickCount % 2 != 0 || !active()) return;
-            if (player.isOnGround()) return;
+            if (!wallTouch()) return;
+            var v = player.getVelocity();
+            player.setVelocity(new Vector(v.getX(), 0.16, v.getZ()));
+            player.setFallDistance(0);
+        }
+
+        /** 检查身体上下两层、面向及左右斜向是否贴着实心方块。 */
+        private boolean wallTouch() {
             Location loc = player.getLocation();
-            var dir = loc.getDirection().setY(0).normalize().multiply(0.6);
-            boolean againstWall = loc.clone().add(dir).getBlock().getType().isSolid()
-                    || loc.clone().add(0, 1, 0).add(dir).getBlock().getType().isSolid();
-            if (againstWall && !player.isInWater()) {
-                var v = player.getVelocity();
-                player.setVelocity(new Vector(v.getX() * 0.6, 0.16, v.getZ() * 0.6));
-                player.setFallDistance(0);
+            var dir = loc.getDirection().setY(0);
+            dir = dir.lengthSquared() < 1e-4 ? new Vector(1, 0, 0) : dir.normalize().multiply(0.4);
+            var left = new Vector(-dir.getZ(), 0, dir.getX());
+            for (double y : new double[]{0.5, 1.5}) {
+                var base = loc.clone().add(0, y, 0);
+                if (solid(base.clone().add(dir))) return true;
+                if (solid(base.clone().add(dir).add(left.clone().multiply(0.35)))) return true;
+                if (solid(base.clone().add(dir).subtract(left.clone().multiply(0.35)))) return true;
             }
+            return false;
+        }
+
+        private boolean solid(Location l) {
+            return l.getBlock().getType().isSolid();
+        }
+
+        /** 诊断: 各条件分量实时值 */
+        public String debugState() {
+            boolean toggle = mgr.isPowerActive(player, "*:*_toggle");
+            String raw = mgr.dumpToggleStates(player);
+            boolean collided;
+            try {
+                collided = (boolean) player.getClass().getMethod("isCollidingHorizontally").invoke(player);
+            } catch (Exception e) {
+                var dir0 = player.getLocation().getDirection().setY(0);
+                if (dir0.lengthSquared() < 1e-4) dir0 = new Vector(1, 0, 0);
+                collided = player.getLocation().add(dir0.normalize().multiply(0.6)).getBlock().getType().isSolid();
+            }
+            return "toggle:" + toggle + " 贴墙:" + wallTouch() + " 碰撞:" + collided + " 潜行:" + player.isSneaking() + " 状态集:[" + raw + "]";
         }
     }
 }

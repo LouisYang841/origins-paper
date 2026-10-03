@@ -33,6 +33,7 @@ public final class OriginManager {
     private final NamespacedKey pdcKey;
 
     private final Map<UUID, PlayerOriginData> active = new ConcurrentHashMap<>();
+    private final Map<String, String> subToParent = new HashMap<>();
     private final Map<UUID, Set<String>> toggleStates = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, Long>> cooldowns = new ConcurrentHashMap<>();
     private SchedulerAdapter.Cancelable tickTask;
@@ -115,7 +116,10 @@ public final class OriginManager {
     /** 设置玩家起源（null = 人类/无）。会重建 power 实例并持久化。 */
     public void setOrigin(Player p, String originId) {
         removePowers(p);
-        toggleStates.remove(p.getUniqueId());
+        Set<String> prior = toggleStates.remove(p.getUniqueId());
+        if (prior != null && !prior.isEmpty()) {
+            plugin.getLogger().info("[states] 清空 " + p.getName() + " 的开关状态(原:" + prior + ") 原因=setOrigin");
+        }
         cooldowns.remove(p.getUniqueId());
         if (originId == null) {
             p.getPersistentDataContainer().set(pdcKey, PersistentDataType.STRING, "origins:human");
@@ -156,7 +160,10 @@ public final class OriginManager {
     public void unloadFor(Player p) {
         removePowers(p);
         active.remove(p.getUniqueId());
-        toggleStates.remove(p.getUniqueId());
+        Set<String> prior = toggleStates.remove(p.getUniqueId());
+        if (prior != null && !prior.isEmpty()) {
+            plugin.getLogger().info("[states] 清空 " + p.getName() + " 的开关状态(原:" + prior + ") 原因=退出");
+        }
         cooldowns.remove(p.getUniqueId());
     }
 
@@ -182,7 +189,8 @@ public final class OriginManager {
                 if (!entry.getValue().isJsonObject()) continue;
                 JsonObject sub = entry.getValue().getAsJsonObject();
                 if (!sub.has("type")) continue;
-                String subId = def.id() + "/" + entry.getKey();
+                String subId = def.id() + "_" + entry.getKey();
+                subToParent.put(subId, def.id());
                 PowerDefinition subDef = new PowerDefinition(subId,
                         sub.get("type").getAsString(), sub,
                         Conditions.parse(sub.has("condition") ? sub.getAsJsonObject("condition") : null, registry));
@@ -220,15 +228,20 @@ public final class OriginManager {
 
     public boolean isPowerActive(Player p, String pattern) {
         Set<String> states = toggleStates.get(p.getUniqueId());
-        if (states == null) return false;
-        for (String id : states) {
-            if (matchesPattern(id, pattern)) return true;
+        boolean result = false;
+        if (states != null) {
+            for (String id : states) {
+                if (matchesPattern(id, pattern)) { result = true; break; }
+            }
         }
-        return false;
+        plugin.getLogger().info("[probe] " + p.getName() + " pattern=" + pattern
+                + " states=" + (states == null ? "null" : states) + " -> " + result);
+        return result;
     }
 
     /** "*:*_toggle" 后缀通配；"*:phantomize" 任意命名空间精确 key；"origins:phantomize" 精确 id。 */
     public static boolean matchesPattern(String id, String pattern) {
+        id = id.replace('/', '_'); // 兼容旧分隔符
         if (id.equals(pattern)) return true;
         if (pattern.contains("*:*")) {
             return id.endsWith(pattern.substring(pattern.indexOf("*:*") + 3));
@@ -251,15 +264,22 @@ public final class OriginManager {
         }
     }
 
+    /** 诊断: 原样输出玩家的 toggle 状态集合。 */
+    public String dumpToggleStates(Player p) {
+        Set<String> states = toggleStates.get(p.getUniqueId());
+        return states == null ? "" : String.join(",", states);
+    }
+
     /** 切换 toggle，并同步切换其 multiple 父 power 的状态（power_active 按 parent 匹配）。 */
     public boolean toggleStateWithParents(Player p, String powerId) {
         boolean nowOn = toggleState(p, powerId);
-        int slash = powerId.lastIndexOf('/');
-        if (slash > 0) {
-            String parent = powerId.substring(0, slash);
+        plugin.getLogger().info("[toggle] " + p.getName() + " " + powerId + " -> " + (nowOn ? "ON" : "OFF")
+                + " states=" + toggleStates.get(p.getUniqueId()));
+        String parent = subToParent.get(powerId);
+        if (parent != null) {
             Set<String> states = toggleStates.get(p.getUniqueId());
-            boolean siblingOn = states.stream().anyMatch(id -> id.startsWith(parent + "/"));
-            if (siblingOn) states.add(parent);
+            boolean anySiblingOn = states.stream().anyMatch(id -> parent.equals(subToParent.get(id)));
+            if (anySiblingOn) states.add(parent);
             else states.remove(parent);
         }
         return nowOn;
