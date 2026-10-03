@@ -1,0 +1,12 @@
+{
+  "human": { "name": "人类", "description": "平凡之躯，无特殊能力。" },
+  "avian": { "name": "羽人", "description": "生来似鸟，不食荤腥，从高处缓缓飘落，却不能入睡于低处。" },
+  "blazeborn": { "name": "炽焰之子", "description": "诞生于烈焰，免疫火焰，在水中受创，家园在下界。" },
+  "enderian": { "name": "末影裔", "description": "末影人的后裔，能徒手采石、投掷末影珍珠，却惧怕水源。" },
+  "feline": { "name": "猫裔", "description": "身手矫健如猫，无惧高空，可缓慢潜行，却不能挖掘坚硬的石头。" },
+  "merling": { "name": "深海人鱼", "description": "水是你的领域，可长时间潜行于水中，但在陆上难以呼吸。" },
+  "shulk": { "name": "潜影贝裔", "description": "天生厚甲与额外储物空间，却难以使用盔甲。" },
+  "arachnid": { "name": "蛛裔", "description": "能攀爬墙壁、不惧蛛网，以肉为食，身形脆弱。" },
+  "elytrian": { "name": "翼灵", "description": "天生带翼，翱翔天际，但远离天空时格外脆弱。" },
+  "phantom": { "name": "幻影", "description": "半实体的幽灵，可隐身潜行、穿过墙壁，但在日光下艰难求生。" }
+}

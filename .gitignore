@@ -1,0 +1,6 @@
+.gradle/
+build/
+server/
+spec/extracted/
+spec/origins.jar
+spec/versions.json
