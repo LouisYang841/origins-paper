@@ -115,6 +115,8 @@ public final class OriginManager {
     /** 设置玩家起源（null = 人类/无）。会重建 power 实例并持久化。 */
     public void setOrigin(Player p, String originId) {
         removePowers(p);
+        toggleStates.remove(p.getUniqueId());
+        cooldowns.remove(p.getUniqueId());
         if (originId == null) {
             p.getPersistentDataContainer().set(pdcKey, PersistentDataType.STRING, "origins:human");
             active.remove(p.getUniqueId());
@@ -256,7 +258,8 @@ public final class OriginManager {
         if (slash > 0) {
             String parent = powerId.substring(0, slash);
             Set<String> states = toggleStates.get(p.getUniqueId());
-            if (nowOn) states.add(parent);
+            boolean siblingOn = states.stream().anyMatch(id -> id.startsWith(parent + "/"));
+            if (siblingOn) states.add(parent);
             else states.remove(parent);
         }
         return nowOn;

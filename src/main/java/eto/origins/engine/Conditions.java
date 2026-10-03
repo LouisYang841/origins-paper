@@ -140,7 +140,7 @@ public final class Conditions {
             Condition c = parse(e.getAsJsonObject(), registry);
             if (c != null) {
                 list.add(c);
-            } else {
+            } else if (registry != null) {
                 registry.warnUnknownCondition(e.getAsJsonObject().get("type").getAsString());
             }
         }

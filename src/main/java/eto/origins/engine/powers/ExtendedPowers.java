@@ -57,7 +57,7 @@ public final class ExtendedPowers {
 
         BurnPower(PowerDefinition def, Player player, OriginManager mgr) {
             super(def, player, mgr);
-            this.interval = def.getLong("interval", 20);
+            this.interval = Math.max(1, def.getLong("interval", 20));
             this.burnDuration = def.raw().has("burn_duration") ? def.raw().get("burn_duration").getAsInt() : 3;
         }
 
@@ -243,7 +243,7 @@ public final class ExtendedPowers {
 
         GlowPower(PowerDefinition def, Player player, OriginManager mgr) {
             super(def, player, mgr);
-            this.frequency = def.getLong("frequency", 30);
+            this.frequency = Math.max(1, def.getLong("frequency", 30));
         }
 
         @Override

@@ -54,8 +54,9 @@ public final class OriginsPlugin extends JavaPlugin {
         loader.reload();
         // 重建在线玩家的 power 实例
         for (Player p : getServer().getOnlinePlayers()) {
-            if (manager.hasChosen(p)) {
-                manager.setOrigin(p, manager.originOf(p).id());
+            var origin = manager.originOf(p);
+            if (origin != null && manager.origin(origin.id()) != null) {
+                manager.setOrigin(p, origin.id());
             }
         }
     }
