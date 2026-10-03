@@ -1,0 +1,11 @@
+name: OriginsPaper
+version: '0.1.0'
+main: eto.origins.OriginsPlugin
+api-version: '1.21'
+description: 数据驱动的 Origins（起源/种族）插件
+author: eto
+commands:
+  origin:
+    description: Origins 主命令
+    aliases: [origins]
+    usage: /origin [select|info|list|reload|set]
