@@ -4,3 +4,7 @@ server/
 spec/extracted/
 spec/origins.jar
 spec/versions.json
+tools/
+bin/
+.gh/
+.env

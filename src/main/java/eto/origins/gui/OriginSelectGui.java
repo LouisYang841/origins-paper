@@ -28,9 +28,9 @@ public final class OriginSelectGui implements Listener {
         final OriginManager mgr;
         final Inventory inventory;
 
-        Holder(OriginManager mgr, Inventory inventory) {
+        Holder(OriginManager mgr, int size, String title) {
             this.mgr = mgr;
-            this.inventory = inventory;
+            this.inventory = Bukkit.createInventory(this, size, title);
         }
 
         @Override
@@ -49,7 +49,7 @@ public final class OriginSelectGui implements Listener {
         List<Origin> origins = new ArrayList<>(mgr.origins());
         origins.sort(Comparator.comparingInt(Origin::order));
         int size = ((Math.max(1, origins.size()) - 1) / 9 + 1) * 9;
-        Holder holder = new Holder(mgr, Bukkit.createInventory(null, size, "选择你的起源"));
+        Holder holder = new Holder(mgr, size, "选择你的起源");
         for (Origin origin : origins) {
             Material mat = Material.matchMaterial(origin.iconMaterial());
             ItemStack item = new ItemStack(mat == null ? Material.BOOK : mat);

@@ -174,7 +174,7 @@ public final class OriginManager {
     /** 实例化一个 power 定义（含 multiple 展开）。 */
     private void instantiate(PowerDefinition def, Player p, List<Power> out) {
         String type = def.type().toLowerCase(Locale.ROOT);
-        if (type.equals("origins:multiple")) {
+        if (Conditions.shortName(type).equals("multiple")) {
             for (var entry : def.raw().entrySet()) {
                 if (entry.getKey().equals("type")) continue;
                 if (!entry.getValue().isJsonObject()) continue;
@@ -217,12 +217,22 @@ public final class OriginManager {
     // ================= 状态查询（power_active / toggle / cooldown）=================
 
     public boolean isPowerActive(Player p, String pattern) {
-        // pattern 形如 "*:*_toggle" 或 "origins:phantomize"
-        String suffix = pattern.contains("*:*") ? pattern.substring(pattern.indexOf("*:*") + 3) : pattern;
         Set<String> states = toggleStates.get(p.getUniqueId());
         if (states == null) return false;
         for (String id : states) {
-            if (id.endsWith(suffix)) return true;
+            if (matchesPattern(id, pattern)) return true;
+        }
+        return false;
+    }
+
+    /** "*:*_toggle" 后缀通配；"*:phantomize" 任意命名空间精确 key；"origins:phantomize" 精确 id。 */
+    public static boolean matchesPattern(String id, String pattern) {
+        if (id.equals(pattern)) return true;
+        if (pattern.contains("*:*")) {
+            return id.endsWith(pattern.substring(pattern.indexOf("*:*") + 3));
+        }
+        if (pattern.startsWith("*:")) {
+            return id.endsWith(":" + pattern.substring(2));
         }
         return false;
     }
@@ -261,9 +271,8 @@ public final class OriginManager {
 
     /** entity_action: toggle_power —— 按模式（如 "*:*_toggle"）找到 toggle 并切换。 */
     public void togglePowerByPattern(Player p, String pattern) {
-        String suffix = pattern.contains("*:*") ? pattern.substring(pattern.indexOf("*:*") + 3) : pattern;
         for (Power power : powersOf(p)) {
-            if (power.definition().id().endsWith(suffix) && power instanceof ActivePower ap) {
+            if (matchesPattern(power.definition().id(), pattern) && power instanceof ActivePower ap) {
                 ap.onTrigger();
                 return;
             }
