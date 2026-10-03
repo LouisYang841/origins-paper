@@ -225,9 +225,11 @@ public final class PlayerListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
-        if (event.isBedSpawn() || event.isAnchorSpawn()) return;
         for (Power power : mgr.powersOf(event.getPlayer())) {
             power.onRespawn();
+        }
+        if (event.isBedSpawn() || event.isAnchorSpawn()) return;
+        for (Power power : mgr.powersOf(event.getPlayer())) {
             var loc = power.modifyRespawnLocation(new Power.Location2(
                     event.getRespawnLocation().getWorld().getName(),
                     event.getRespawnLocation().getX(),

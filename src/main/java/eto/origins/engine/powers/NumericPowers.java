@@ -84,7 +84,7 @@ public final class NumericPowers {
 
         ConditionedAttributePower(PowerDefinition def, Player player, OriginManager mgr, Plugin plugin) {
             super(def, player, mgr, plugin);
-            this.tickRate = def.getLong("tick_rate", 20);
+            this.tickRate = Math.max(1, def.getLong("tick_rate", 20));
         }
 
         @Override
@@ -104,11 +104,14 @@ public final class NumericPowers {
         private final double amount;
         private final DamageConditions.DamageCondition damageCondition;
 
+        private final String operation;
+
         DamageModifierPower(PowerDefinition def, Player player, OriginManager mgr, boolean dealt) {
             super(def, player, mgr);
             this.dealt = dealt;
             JsonObject mod = def.raw().has("modifier") ? def.raw().getAsJsonObject("modifier") : new JsonObject();
             this.amount = mod.has("amount") ? mod.get("amount").getAsDouble() : 0;
+            this.operation = mod.has("operation") ? mod.get("operation").getAsString() : "add_value";
             this.damageCondition = DamageConditions.parse(
                     def.raw().has("damage_condition") ? def.raw().getAsJsonObject("damage_condition") : null, null);
         }
@@ -130,8 +133,7 @@ public final class NumericPowers {
         }
 
         private double applyOp(double damage) {
-            String op = def.raw().getAsJsonObject("modifier").get("operation").getAsString();
-            return switch (op) {
+            return switch (operation) {
                 case "add_value", "add_base_early" -> damage + amount;
                 case "multiply_base_multiplicative", "multiply_total_multiplicative",
                      "add_multiplied_total", "add_multiplied_base" -> damage * (1 + amount);
@@ -139,6 +141,7 @@ public final class NumericPowers {
             };
         }
     }
+
 
     // ================= 共享解析 =================
     record ModifierSpec(Attribute attribute, NamespacedKey key, double amount, AttributeModifier.Operation operation) {

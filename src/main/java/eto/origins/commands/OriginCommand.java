@@ -85,6 +85,12 @@ public final class OriginCommand implements TabExecutor {
                     sender.sendMessage("§c玩家不在线: " + args[1]);
                     return true;
                 }
+                if (args[2].equalsIgnoreCase("human") || args[2].endsWith(":human")) {
+                    mgr.setOrigin(target, null);
+                    sender.sendMessage("§a已将 " + target.getName() + " 的起源设为 人类");
+                    target.sendMessage("§a你的起源已被设为 §e人类");
+                    return true;
+                }
                 String id = args[2].contains(":") ? args[2] : "origins:" + args[2];
                 if (mgr.origin(id) == null) {
                     sender.sendMessage("§c未知起源: " + id);

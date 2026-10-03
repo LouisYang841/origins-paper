@@ -40,7 +40,7 @@ public final class TimedPowers {
 
         DamageOverTimePower(PowerDefinition def, Player player, OriginManager mgr) {
             super(def, player, mgr);
-            this.interval = def.getLong("interval", 20);
+            this.interval = Math.max(1, def.getLong("interval", 20));
             this.onsetDelay = def.getLong("onset_delay", 0);
             this.damage = def.raw().has("damage") ? def.raw().get("damage").getAsDouble() : 1.0;
             // 注：自定义 damage_type（如 origins:hurt_by_water）服务端以通用伤害近似
@@ -66,7 +66,7 @@ public final class TimedPowers {
 
         ExhaustPower(PowerDefinition def, Player player, OriginManager mgr) {
             super(def, player, mgr);
-            this.interval = def.getLong("interval", 20);
+            this.interval = Math.max(1, def.getLong("interval", 20));
             this.exhaustion = def.raw().has("exhaustion") ? def.raw().get("exhaustion").getAsDouble() : 0.1;
         }
 
@@ -84,7 +84,7 @@ public final class TimedPowers {
 
         ParticlePower(PowerDefinition def, Player player, OriginManager mgr) {
             super(def, player, mgr);
-            this.frequency = def.getLong("frequency", 4);
+            this.frequency = Math.max(1, def.getLong("frequency", 4));
             try {
                 this.particle = Particle.valueOf(def.raw().get("particle").getAsString()
                         .replace("minecraft:", "").toUpperCase());
@@ -147,7 +147,7 @@ public final class TimedPowers {
                     if (t != null) effects.add(t);
                 }
             }
-            this.stacks = Math.min(0, minStacks);
+            this.stacks = Math.min(maxStacks, minStacks);
         }
 
         @Override

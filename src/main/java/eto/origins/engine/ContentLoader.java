@@ -74,8 +74,15 @@ public final class ContentLoader {
                 JsonObject json = gson.fromJson(reader, JsonObject.class);
                 if (!json.has("type")) return;
                 String type = json.get("type").getAsString();
-                Condition cond = json.has("condition")
-                        ? Conditions.parse(json.getAsJsonObject("condition"), registry) : null;
+                Condition cond = null;
+                if (json.has("condition") && json.get("condition").isJsonObject()) {
+                    cond = Conditions.parse(json.getAsJsonObject("condition"), registry);
+                    if (cond == null) {
+                        // 未知条件类型绝不能让 power 变成无条件生效
+                        registry.warnUnknownCondition("顶层条件(按false处理) @ " + id);
+                        cond = (player, m) -> false;
+                    }
+                }
                 powers.put(id, new PowerDefinition(id, type, json, cond));
             } catch (Exception e) {
                 plugin.getLogger().warning("解析 power 失败 " + p + ": " + e.getMessage());

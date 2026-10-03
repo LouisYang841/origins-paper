@@ -24,7 +24,7 @@ public final class StatePowers {
 
     public static void registerAll(PowerRegistry registry) {
         registry.register(InvulnerabilityPower::new, "origins:invulnerability");
-        registry.register((def, p, m) -> InvulnerabilityPower.fire(), "origins:fire_immunity");
+        registry.register(InvulnerabilityPower::fire, "origins:fire_immunity");
         registry.register(EffectImmunityPower::new, "origins:effect_immunity");
         registry.register(WaterBreathingPower::new, "origins:water_breathing");
         registry.register(NightVisionPower::new, "origins:night_vision");
@@ -43,11 +43,11 @@ public final class StatePowers {
                     def.raw().has("damage_condition") ? def.raw().getAsJsonObject("damage_condition") : null, null);
         }
 
-        static Power fire() {
-            return new InvulnerabilityPower(null, null, null) {
+        static Power fire(PowerDefinition def, Player p, OriginManager m) {
+            return new InvulnerabilityPower(def, p, m) {
                 @Override
                 public boolean invulnerableTo(EntityDamageEvent event) {
-                    return switch (event.getCause()) {
+                    return active() && switch (event.getCause()) {
                         case FIRE, FIRE_TICK, LAVA, HOT_FLOOR -> true;
                         default -> false;
                     };
