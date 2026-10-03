@@ -117,14 +117,24 @@ public final class Conditions {
                 return (p, m) -> false; // TODO M3
             }
             case "fluid_height" -> {
+                // 原版语义: 实体所处位置的流体高度。近似: 脚或眼任一处于该流体即视为 >0
                 String fluid = json.get("fluid").getAsString();
                 String cmp = json.get("comparison").getAsString();
                 double compareTo = json.get("compare_to").getAsDouble();
+                boolean wantsLava = fluid.endsWith("lava");
                 return (p, m) -> {
-                    boolean inWater = fluid.endsWith("water");
-                    boolean submerged = p.getEyeLocation().getBlock().isLiquid() == inWater
-                            && p.getEyeLocation().getBlock().isLiquid();
-                    return compare(submerged ? 1 : 0, cmp, compareTo);
+                    var feet = p.getLocation().getBlock();
+                    var eyes = p.getEyeLocation().getBlock();
+                    boolean feetIn, eyesIn;
+                    if (wantsLava) {
+                        feetIn = feet.getType() == Material.LAVA;
+                        eyesIn = eyes.getType() == Material.LAVA;
+                    } else {
+                        feetIn = feet.isLiquid() && feet.getType() != Material.LAVA;
+                        eyesIn = eyes.isLiquid() && eyes.getType() != Material.LAVA;
+                    }
+                    double height = (feetIn || eyesIn) ? 0.9 : 0;
+                    return compare(height, cmp, compareTo);
                 };
             }
             default -> {
